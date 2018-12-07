@@ -1,7 +1,0 @@
-[
-  {
-    "directory": "/home/toby/Documents/e2fuse/builddir",
-    "command": "cc -Ihello@exe -I. -I.. -I/usr/local/include/fuse3 -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -g  -MD -MQ 'hello@exe/main.c.o' -MF 'hello@exe/main.c.o.d' -o 'hello@exe/main.c.o' -c ../main.c",
-    "file": "../main.c"
-  }
-]
