@@ -96,15 +96,47 @@ static int reply_buf_limited(
 }
 
 
-static void hello_ll_readdir(
-	fuse_req_t req, fuse_ino_t ino, 
-	size_t size, off_t off, 
-	struct fuse_file_info *fi
-){
+static void hello_ll_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
+			     off_t off, struct fuse_file_info *fi)
+{
+	(void) fi;
 
+	if (ino != 1)
+		fuse_reply_err(req, ENOTDIR);
+	else {
+		struct dirbuf b;
+
+		memset(&b, 0, sizeof(b));
+		dirbuf_add(req, &b, ".", 1);
+		dirbuf_add(req, &b, "..", 1);
+		dirbuf_add(req, &b, hello_name, 2);
+		reply_buf_limited(req, b.p, b.size, off, size);
+		free(b.p);
+	}
 }
 
+static void hello_ll_open(fuse_req_t req, fuse_ino_t ino,
+			  struct fuse_file_info *fi)
+{
+	if (ino != 2)
+		fuse_reply_err(req, EISDIR);
+	else if ((fi->flags & 3) != O_RDONLY)
+		fuse_reply_err(req, EACCES);
+	else
+		fuse_reply_open(req, fi);
+}
 
+static void hello_ll_read(fuse_req_t req, fuse_ino_t ino, size_t size,
+			  off_t off, struct fuse_file_info *fi)
+{
+	(void) fi;
+	
+	if (ino == 2) {
+		fuse_reply_err(req, EACCES);
+	}
+	
+	reply_buf_limited(req, hello_str, strlen(hello_str), off, size);
+}
 
 
 static struct fuse_lowlevel_ops hello_ll_oper = {
@@ -112,8 +144,8 @@ static struct fuse_lowlevel_ops hello_ll_oper = {
 	// ls function 
 	.getattr	= hello_ll_getattr,
 	.readdir	= hello_ll_readdir,
-	// .open		= hello_ll_open,
-	// .read		= hello_ll_read,
+	.open		= hello_ll_open,
+	.read		= hello_ll_read,
 };
 
 
@@ -128,7 +160,6 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	
 	if (opts.show_help) {
 		printf("usage: %s [options] <mountpoint>\n\n", argv[0]);
 		fuse_cmdline_help();
@@ -158,6 +189,17 @@ int main(int argc, char *argv[])
 		goto error_out3;
 	}
 	
+	fuse_daemonize(opts.foreground);
+
+	if (opts.singlethread){
+		ret = fuse_session_loop(se);
+	}
+	else {
+		ret = fuse_session_loop_mt(se, opts.clone_fd);
+	}
+	fuse_session_unmount(se);
+
+
 
 	return 0;
 
