@@ -130,6 +130,91 @@ static struct fuse_lowlevel_ops op_ll_oper = {
 };
 
 
+
+static int parse_options (int argc, char *argv[], struct extfs_data *opts)
+{
+	int c;
+
+	static const char *sopt = "o:hv";
+	static const struct option lopt[] = {
+		{ "options",	 required_argument,	NULL, 'o' },
+		{ "help",	 no_argument,		NULL, 'h' },
+		{ "verbose",	 no_argument,		NULL, 'v' },
+		{ NULL,		 0,			NULL,  0  }
+	};
+
+#if 0
+	printf("arguments;\n");
+	for (c = 0; c < argc; c++) {
+		printf("%d: %s\n", c, argv[c]);
+	}
+	printf("done\n");
+#endif
+
+	opterr = 0; /* We'll handle the errors, thank you. */
+
+	while ((c = getopt_long(argc, argv, sopt, lopt, NULL)) != -1) {
+		switch (c) {
+			case 'o':
+				if (opts->options)
+					if (strappend(&opts->options, ","))
+						return -1;
+				if (strappend(&opts->options, optarg))
+					return -1;
+				break;
+			case 'h':
+				usage();
+				exit(9);
+			case 'v':
+				/*
+				 * We must handle the 'verbose' option even if
+				 * we don't use it because mount(8) passes it.
+				 */
+				opts->debug = 1;
+				break;
+			default:
+				debugf_main("Unknown option '%s'", argv[optind - 1]);
+				return -1;
+		}
+	}
+
+	if (optind < argc) {
+		optarg=argv[optind++];
+		if (optarg[0] != '/') {
+			char fulldevice[PATH_MAX+1];
+			if (!realpath(optarg, fulldevice)) {
+				debugf_main("Cannot mount %s", optarg);
+				free(opts->device);
+				opts->device = NULL;
+				return -1;
+			} else
+				opts->device = strdup(fulldevice);
+		} else
+			opts->device = strdup(optarg);
+	}
+
+	if (optind < argc) {
+		opts->mnt_point = argv[optind++];
+	}
+
+	if (optind < argc) {
+		debugf_main("You must specify exactly one device and exactly one mount point");
+		return -1;
+	}
+
+	if (!opts->device) {
+		debugf_main("No device is specified");
+		return -1;
+	}
+	if (!opts->mnt_point) {
+		debugf_main("No mountpoint is specified");
+		return -1;
+	}
+
+	return 0;
+}
+
+
 int main(int argc, char *argv[])
 {
 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
@@ -154,6 +239,8 @@ int main(int argc, char *argv[])
 		ret = 0 ;
 		goto error_out1;
 	}
+
+	/* TODO: create and inject user data here */
 	se = fuse_session_new(&args, &op_ll_oper,
 			      sizeof(op_ll_oper), NULL);
 
