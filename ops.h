@@ -1,5 +1,5 @@
 #include "fusell_ext4.h"
-void *op_ll_init(
+void op_ll_init(
     void *userdata, struct fuse_conn_info *conn
 );
 void op_ll_getattr(

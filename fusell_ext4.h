@@ -55,4 +55,48 @@ ext2_filsys current_ext2fs(fuse_req_t req);
 #endif
 
 
+
+#if ENABLE_DEBUG
+
+static inline void debug_printf (const char *function, char *file, int line, const char *fmt, ...)
+{
+	va_list args;
+	struct fuse_context *mycontext=fuse_get_context();
+	struct extfs_data *e2data=mycontext->private_data;
+	if (e2data && (e2data->debug == 0 || e2data->silent == 1)) {
+		return;
+	}
+	printf("%s: ", PACKAGE);
+	va_start(args, fmt);
+	vprintf(fmt, args);
+	va_end(args);
+	printf(" [%s (%s:%d)]\n", function, file, line);
+}
+
+#define debugf(a...) { \
+	debug_printf(__FUNCTION__, __FILE__, __LINE__, a); \
+}
+
+static inline void debug_main_printf (const char *function, char *file, int line, const char *fmt, ...)
+{
+	va_list args;
+	printf("%s: ", PACKAGE);
+	va_start(args, fmt);
+	vprintf(fmt, args);
+	va_end(args);
+	printf(" [%s (%s:%d)]\n", function, file, line);
+}
+
+#define debugf_main(a...) { \
+	debug_main_printf(__FUNCTION__, __FILE__, __LINE__, a); \
+}
+
+#else /* ENABLE_DEBUG */
+
+#define debugf(a...) do { } while(0)
+#define debugf_main(a...) do { } while(0)
+
+#endif /* ENABLE_DEBUG */
+
+
 #endif // FUSELL_EXT4
