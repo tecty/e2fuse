@@ -121,6 +121,7 @@ static void op_ll_read(fuse_req_t req, fuse_ino_t ino, size_t size,
 
 
 static struct fuse_lowlevel_ops op_ll_oper = {
+	.init       = op_ll_init,
 	.lookup		= op_ll_lookup,
 	// ls function 
 	.getattr	= op_ll_getattr,
@@ -239,7 +240,7 @@ int main(int argc, char *argv[])
 		ret = 0 ;
 		goto error_out1;
 	}
-
+	/*TODO: parse args here */
 	/* TODO: create and inject user data here */
 	se = fuse_session_new(&args, &op_ll_oper,
 			      sizeof(op_ll_oper), NULL);

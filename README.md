@@ -2,7 +2,6 @@
 
 Ext4 fuse compile from e2fsprogs project.
 
+## TODO
 
-## TODO 
-
-Store the extfs_data to to private user data 
+Store the extfs_data to to private user data.

@@ -5,7 +5,8 @@ fuse3_ll_dep = dependency('fuse3')
 
 
 op_lib = shared_library(
-    'op_lib',['op_getattr.c', 'fuse_util.c']
+    'ops',['op_getattr.c', 'fuse_util.c'],
+    dependencies: fuse3_ll_dep,
 )
 
 executable(

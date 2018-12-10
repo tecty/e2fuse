@@ -42,7 +42,12 @@ struct extfs_data {
 	ext2_filsys e2fs;
 };
 
-static inline ext2_filsys current_ext2fs(fuse_req_t req);
+/* max timeout to flush bitmaps, to reduce inconsistencies */
+#define FLUSH_BITMAPS_TIMEOUT 10
+
+
+ext2_filsys current_ext2fs(fuse_req_t req);
+
 
 // path max ? 
 #ifndef PATH_MAX
